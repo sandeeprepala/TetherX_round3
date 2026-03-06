@@ -7,6 +7,7 @@ import { connectDB } from "./config/db.js";
 import authRoutes from "./controllers/authController.js";
 import patientRoutes from "./controllers/patientController.js";
 import doctorRoutes from "./controllers/doctorController.js";
+import queryRoutes from "./controllers/queryController.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ connectDB();
 app.use("/auth", authRoutes);
 app.use("/patient", patientRoutes);
 app.use("/doctor", doctorRoutes);
+app.use("/query", queryRoutes);
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");

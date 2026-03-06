@@ -14,39 +14,17 @@ router.post("/request/all", auth, async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // 1️⃣ find all doctors of specialization
-    const doctors = await Doctor.find({ specialization });
-
-    const requests = [];
-
-    for (const doctor of doctors) {
-
-      // 2️⃣ check overlapping accepted appointment
-      const overlap = await Appointment.findOne({
-        doctorId: doctor._id,
-        status: "accepted",
-        startDate: { $lte: end },
-        endDate: { $gte: start }
-      });
-
-      // 3️⃣ if no overlap → create request
-      if (!overlap) {
-        const reqDoc = await Appointment.create({
-          patientId,
-          doctorId: doctor._id,
-          specialization,
-          startDate: start,
-          endDate: end,
-          symptoms
-        });
-
-        requests.push(reqDoc);
-      }
-    }
+    const reqDoc = await Appointment.create({
+      patientId,
+      specialization,
+      startDate: start,
+      endDate: end,
+      symptoms
+    });
 
     res.json({
-      message: "Requests sent",
-      requests
+      message: "Request created",
+      request: reqDoc
     });
 
   } catch (error) {

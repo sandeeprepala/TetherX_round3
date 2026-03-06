@@ -92,8 +92,7 @@ const BookingModal = ({ patientId, onClose, onSuccess }) => {
                 endDate: form.endDate,
                 symptoms: form.symptoms,
             });
-            const sent = res?.requests?.length ?? 0;
-            onSuccess(`Request sent to ${sent} doctor${sent !== 1 ? 's' : ''} in ${form.specialization}.`);
+            onSuccess(`Request created in ${form.specialization}. A doctor from this department can now accept it.`);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -244,7 +243,7 @@ export const PatientDashboard = () => {
 
                 <nav className="flex flex-col gap-1 flex-grow">
                     <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/dashboard" />
-                    {/* <SidebarItem icon={MessageSquare} label="Submit Query" to="/query" /> */}
+                    <SidebarItem icon={MessageSquare} label="Submit Query" to="/query" />
                     <SidebarItem icon={Calendar} label="Appointments" to="/appointments" />
                     {/* <SidebarItem icon={User} label="My Queries" to="/queries" /> */}
                     <SidebarItem icon={Settings} label="Settings" to="/settings" />

@@ -26,23 +26,46 @@ router.put("/availability", auth, async (req, res) => {
 router.post("/accept/:id", auth, async (req, res) => {
   const request = await Appointment.findById(req.params.id);
 
-  if (!request) return res.json({ msg: "Not found" });
+    if (!request) return res.status(404).json({ msg: "Not found" });
 
-  const exists = await Appointment.findOne({
-    doctorId: request.doctorId,
-    status: "accepted",
-    startDate: { $lte: request.endDate },
-    endDate: { $gte: request.startDate }
-  });
+    // Prevent accepting past requests
+    if (request.endDate && request.endDate < new Date()) {
+      return res.status(400).json({ msg: "Cannot accept past appointment request" });
+    }
 
-  if (exists) return res.json({ msg: "Doctor already has overlapping appointment" });
+    // If already accepted by another doctor, block
+    if (
+      request.status === "accepted" &&
+      request.doctorId &&
+      request.doctorId.toString() !== doctorId
+    ) {
+      return res.status(400).json({ msg: "Request already accepted by another doctor" });
+    }
 
-  request.status = "accepted";
-  request.appointmentDate = request.startDate; // or keep as is
+    request.doctorId = doctorId;
 
-  await request.save();
+    const exists = await Appointment.findOne({
+      doctorId,
+      status: "accepted",
+      startDate: { $lte: request.endDate },
+      endDate: { $gte: request.startDate },
+      _id: { $ne: request._id }
+    });
 
-  res.json(request);
+    if (exists) return res.json({ msg: "Doctor already has overlapping appointment" });
+
+    request.status = "accepted";
+    request.appointmentDate = request.startDate; // or keep as is
+
+    await request.save();
+
+    const populated = await request.populate("patientId");
+
+    res.json(populated);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: "Server error" });
+  }
 });
 
 /* DOCTOR UPCOMING (ACCEPTED ONLY) */

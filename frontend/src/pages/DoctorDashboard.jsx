@@ -5,7 +5,7 @@ import {
     Activity, Check, Clock, AlertCircle, Loader2,
     ChevronRight, X, CalendarRange, Stethoscope,
     UserCheck, ClipboardList, Bell, TrendingUp,
-    CheckCircle2, XCircle, Shield
+    CheckCircle2, XCircle, Shield, MessageSquare
 } from 'lucide-react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -344,6 +344,12 @@ export const DoctorDashboard = () => {
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-3">
+                        <Link
+                            to="/queries"
+                            className="px-5 py-3 glass border border-cyan-500/30 text-cyan-400 rounded-xl font-bold flex items-center gap-2 hover:bg-cyan-500/10 transition-all"
+                        >
+                            <MessageSquare className="w-5 h-5" /> View Queries
+                        </Link>
                         <button
                             onClick={() => setShowAvail(true)}
                             className="px-5 py-3 glass border border-teal-500/30 text-teal-400 rounded-xl font-bold flex items-center gap-2 hover:bg-teal-500/10 transition-all"

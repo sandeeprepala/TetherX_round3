@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { queryApi } from '../api/query';
 
 const symptomsList = [
     'Chest Pain', 'Breathing Issues', 'Fever', 'Headache',
@@ -22,6 +24,7 @@ const symptomsList = [
 ];
 
 export const QueryForm = () => {
+    const { user } = useAuth();
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         name: '',
@@ -32,6 +35,8 @@ export const QueryForm = () => {
         duration: '1 day',
         notes: ''
     });
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState('');
 
     const toggleSymptom = (s) => {
         setFormData(prev => ({
@@ -45,9 +50,30 @@ export const QueryForm = () => {
     const nextStep = () => setStep(s => s + 1);
     const prevStep = () => setStep(s => s - 1);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        nextStep(); // To Success Step
+        if (!user?.id) {
+            setError('You must be logged in as a patient to submit a query.');
+            return;
+        }
+        setSubmitting(true);
+        setError('');
+        try {
+            await queryApi.create({
+                name: formData.name,
+                age: formData.age,
+                gender: formData.gender,
+                symptoms: formData.symptoms,
+                severity: formData.severity,
+                duration: formData.duration,
+                notes: formData.notes,
+            });
+            setStep(4);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -84,6 +110,12 @@ export const QueryForm = () => {
                     className="glass-card p-10 border border-white/5 relative z-10 min-h-[500px] flex flex-col"
                 >
                     <AnimatePresence mode="wait">
+                        {error && (
+                            <div className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-semibold flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4" />
+                                {error}
+                            </div>
+                        )}
                         {step === 1 && (
                             <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-grow flex flex-col gap-8">
                                 <h3 className="text-2xl font-bold text-white font-poppins flex items-center gap-3">
@@ -224,9 +256,13 @@ export const QueryForm = () => {
                                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                                         Back
                                     </button>
-                                    <button onClick={handleSubmit} className="px-10 py-4 bg-cyan-500 rounded-xl text-white font-bold flex items-center gap-3 group glow-cyan shadow-xl shadow-cyan-500/20 hover:scale-105 transition-all">
-                                        Submit Medical Query
-                                        <CheckCircle2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                                    <button
+                                        onClick={handleSubmit}
+                                        disabled={submitting}
+                                        className="px-10 py-4 bg-cyan-500 rounded-xl text-white font-bold flex items-center gap-3 group glow-cyan shadow-xl shadow-cyan-500/20 hover:scale-105 transition-all disabled:opacity-60"
+                                    >
+                                        {submitting ? 'Submitting…' : 'Submit Medical Query'}
+                                        {!submitting && <CheckCircle2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />}
                                     </button>
                                 </div>
                             </motion.div>
