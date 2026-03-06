@@ -1,12 +1,13 @@
 import express from "express";
 import Appointment from "../models/AppointmentRequest.js";
 import Doctor from "../models/Doctor.js";
+import { auth } from "../middleware/auth.js";
 
 const router = express.Router();
 
 /* REQUEST APPOINTMENT TO ALL DOCTORS */
 
-router.post("/request/all", async (req, res) => {
+router.post("/request/all", auth, async (req, res) => {
   try {
     const { patientId, specialization, startDate, endDate, symptoms } = req.body;
 
@@ -56,7 +57,7 @@ router.post("/request/all", async (req, res) => {
 
 /* REQUEST SPECIFIC DOCTOR */
 
-router.post("/request/doctor", async (req, res) => {
+router.post("/request/doctor", auth, async (req, res) => {
   const { patientId, doctorId, startDate, endDate, symptoms } = req.body;
 
   const start = new Date(startDate);
@@ -100,7 +101,7 @@ router.post("/request/doctor", async (req, res) => {
 
 /* PATIENT UPCOMING */
 
-router.get("/appointments/upcoming/:patientId", async (req, res) => {
+router.get("/appointments/upcoming/:patientId", auth, async (req, res) => {
   const appointments = await Appointment.find({
     patientId: req.params.patientId,
     startDate: { $gte: new Date() },
@@ -112,7 +113,7 @@ router.get("/appointments/upcoming/:patientId", async (req, res) => {
 
 /* PATIENT PAST */
 
-router.get("/appointments/past/:patientId", async (req, res) => {
+router.get("/appointments/past/:patientId", auth, async (req, res) => {
   const appointments = await Appointment.find({
     patientId: req.params.patientId,
     endDate: { $lt: new Date() }

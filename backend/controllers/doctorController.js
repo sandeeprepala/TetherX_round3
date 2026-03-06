@@ -23,7 +23,7 @@ router.put("/availability", auth, async (req, res) => {
 
 /* ACCEPT REQUEST */
 
-router.post("/accept/:id", async (req, res) => {
+router.post("/accept/:id", auth, async (req, res) => {
   const request = await Appointment.findById(req.params.id);
 
   if (!request) return res.json({ msg: "Not found" });
@@ -47,7 +47,7 @@ router.post("/accept/:id", async (req, res) => {
 
 /* DOCTOR UPCOMING */
 
-router.get("/appointments/upcoming/:doctorId", async (req, res) => {
+router.get("/appointments/upcoming/:doctorId", auth, async (req, res) => {
   const apps = await Appointment.find({
     doctorId: req.params.doctorId,
     status: "accepted",
