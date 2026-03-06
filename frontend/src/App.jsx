@@ -13,7 +13,7 @@ import { QueriesPage } from './pages/QueriesPage';
 /* ─── Auth guard: redirects to /login if not authenticated ── */
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user?.id) return <Navigate to="/login" replace />;
   return children;
 };
 

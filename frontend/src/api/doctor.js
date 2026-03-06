@@ -36,4 +36,9 @@ export const doctorApi = {
        Returns accepted upcoming appointments with patientId populated */
     getUpcoming: (doctorId) =>
         apiFetch(`/doctor/appointments/upcoming/${doctorId}`),
+
+    /* GET /doctor/appointments/pending/:doctorId
+       Returns pending future appointment requests for this doctor */
+    getPending: (doctorId) =>
+        apiFetch(`/doctor/appointments/pending/${doctorId}`),
 };

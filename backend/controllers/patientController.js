@@ -99,13 +99,15 @@ router.post("/request/doctor", auth, async (req, res) => {
   res.json(reqDoc);
 });
 
-/* PATIENT UPCOMING */
+/* PATIENT UPCOMING
+   Includes both pending and accepted future appointments so that
+   newly created requests are visible on the patient's dashboard. */
 
 router.get("/appointments/upcoming/:patientId", auth, async (req, res) => {
   const appointments = await Appointment.find({
     patientId: req.params.patientId,
     startDate: { $gte: new Date() },
-    status: "accepted"
+    status: { $in: ["pending", "accepted"] }
   }).populate("doctorId");
 
   res.json(appointments);

@@ -244,9 +244,9 @@ export const PatientDashboard = () => {
 
                 <nav className="flex flex-col gap-1 flex-grow">
                     <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/dashboard" />
-                    <SidebarItem icon={MessageSquare} label="Submit Query" to="/query" />
+                    {/* <SidebarItem icon={MessageSquare} label="Submit Query" to="/query" /> */}
                     <SidebarItem icon={Calendar} label="Appointments" to="/appointments" />
-                    <SidebarItem icon={User} label="My Queries" to="/queries" />
+                    {/* <SidebarItem icon={User} label="My Queries" to="/queries" /> */}
                     <SidebarItem icon={Settings} label="Settings" to="/settings" />
                 </nav>
 

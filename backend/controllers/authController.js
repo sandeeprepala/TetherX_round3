@@ -27,8 +27,15 @@ router.post("/patient/register", async (req, res) => {
   });
 
   const token = createToken(patient._id, "patient");
-  res.cookie('token', token, { httpOnly: true, maxAge: 7*24*60*60*1000 });
-  res.json({ msg: "Patient registered successfully" });
+  res.cookie("token", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.json({
+    msg: "Patient registered successfully",
+    user: {
+      id: patient._id,
+      role: "patient",
+      email: patient.email
+    }
+  });
 });
 
 /* DOCTOR REGISTER */
@@ -49,8 +56,15 @@ router.post("/doctor/register", async (req, res) => {
   });
 
   const token = createToken(doctor._id, "doctor");
-  res.cookie('token', token, { httpOnly: true, maxAge: 7*24*60*60*1000 });
-  res.json({ msg: "Doctor registered successfully" });
+  res.cookie("token", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.json({
+    msg: "Doctor registered successfully",
+    user: {
+      id: doctor._id,
+      role: "doctor",
+      email: doctor.email
+    }
+  });
 });
 
 /* LOGIN */
@@ -73,8 +87,15 @@ router.post("/login", async (req, res) => {
   if (!valid) return res.status(400).json({ msg: "Wrong password" });
 
   const token = createToken(user._id, role);
-  res.cookie('token', token, { httpOnly: true, maxAge: 7*24*60*60*1000 });
-  res.json({ msg: "Login successful" });
+  res.cookie("token", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.json({
+    msg: "Login successful",
+    user: {
+      id: user._id,
+      role,
+      email: user.email
+    }
+  });
 });
 
 router.post("/logout", (req, res) => {

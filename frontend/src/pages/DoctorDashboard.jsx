@@ -208,19 +208,24 @@ export const DoctorDashboard = () => {
 
     /* ── State ─────────────────────────────────────────────── */
     const [activeTab, setActiveTab] = useState('overview');
-    const [upcoming, setUpcoming] = useState([]);
+    const [upcoming, setUpcoming] = useState([]);       // accepted appointments
+    const [pending, setPending] = useState([]);         // pending requests
     const [loadingData, setLoadingData] = useState(true);
     const [accepting, setAccepting] = useState(null);   // appointmentId being accepted
     const [showAvail, setShowAvail] = useState(false);
     const [toast, setToast] = useState(null);
 
-    /* ── Fetch upcoming appointments ───────────────────────── */
+    /* ── Fetch upcoming + pending appointments ─────────────── */
     const fetchData = async () => {
         if (!doctorId) { setLoadingData(false); return; }
         setLoadingData(true);
         try {
-            const up = await doctorApi.getUpcoming(doctorId);
+            const [up, pend] = await Promise.all([
+                doctorApi.getUpcoming(doctorId),
+                doctorApi.getPending(doctorId),
+            ]);
             setUpcoming(Array.isArray(up) ? up : []);
+            setPending(Array.isArray(pend) ? pend : []);
         } catch (err) {
             console.error('Failed to load doctor data:', err);
         } finally {
@@ -283,7 +288,7 @@ export const DoctorDashboard = () => {
 
                 <nav className="flex flex-col gap-1 flex-grow">
                     <SidebarItem icon={LayoutDashboard} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-                    <SidebarItem icon={ClipboardList} label="Pending Requests" active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
+                    <SidebarItem icon={ClipboardList} label="Pending Requests" active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} badge={pending.length} />
                     <SidebarItem icon={Calendar} label="Upcoming" active={activeTab === 'upcoming'} onClick={() => setActiveTab('upcoming')} />
                     <SidebarItem icon={CalendarRange} label="Set Availability" active={false} onClick={() => setShowAvail(true)} />
                     <SidebarItem icon={User} label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
@@ -364,7 +369,7 @@ export const DoctorDashboard = () => {
                                 <StatCard label="Total Upcoming" value={upcoming.length} icon={Calendar} color="teal" loading={loadingData} />
                                 <StatCard label="Today's Patients" value={todayAppts.length} icon={UserCheck} color="cyan" loading={loadingData} />
                                 <StatCard label="This Week" value={thisWeek.length} icon={TrendingUp} color="teal" loading={loadingData} />
-                                <StatCard label="Accepted Total" value={upcoming.length} icon={CheckCircle2} color="cyan" loading={loadingData} />
+                                <StatCard label="Pending Requests" value={pending.length} icon={ClipboardList} color="amber" loading={loadingData} />
                             </div>
 
                             {/* Today's schedule */}
@@ -449,46 +454,36 @@ export const DoctorDashboard = () => {
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-2xl font-poppins font-bold text-white">Incoming Patient Requests</h2>
                                 <div className="px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-widest">
-                                    Live from API
+                                    Pending: {pending.length}
                                 </div>
                             </div>
 
-                            {/* Note: The backend doesn't expose a "pending requests for a doctor" endpoint.
-                  Pending requests are created via POST /patient/request/all which broadcasts
-                  to all doctors of a specialization. Once a doctor accepts, status becomes "accepted"
-                  and it appears in /doctor/appointments/upcoming/:doctorId.
-                  
-                  For pending requests, the upcoming endpoint only returns accepted ones.
-                  We surface this info clearly to the doctor. */}
-                            <div className="glass-card border border-amber-500/20 p-8 text-center relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none"></div>
-                                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                                    <Bell className="w-8 h-8 text-amber-400" />
+                            {loadingData ? (
+                                <div className="space-y-4">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />
+                                    ))}
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-3">Pending Requests</h3>
-                                <p className="text-slate-400 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
-                                    When a patient submits an appointment request for your specialization, the system automatically
-                                    creates a pending booking. Once overlapping checks pass, you can accept it below and it will
-                                    move to your upcoming schedule.
-                                </p>
-                                <p className="text-slate-500 text-xs font-medium mb-6">
-                                    Currently the backend surfaces accepted appointments via <code className="text-teal-400 bg-teal-500/10 px-1.5 py-0.5 rounded">GET /doctor/appointments/upcoming/:id</code>.
-                                    Accepted count: <span className="text-white font-bold">{upcoming.length}</span>
-                                </p>
-                                <button
-                                    onClick={() => setActiveTab('upcoming')}
-                                    className="px-6 py-3 bg-teal-500 text-white rounded-xl font-bold flex items-center gap-2 mx-auto hover:scale-105 transition-all"
-                                >
-                                    <Calendar className="w-5 h-5" /> View Accepted Appointments
-                                </button>
-                            </div>
-
-                            {/* All upcoming listed with accept disabled (already accepted) */}
-                            {upcoming.length > 0 && (
-                                <div className="mt-8 space-y-5">
-                                    <h3 className="text-lg font-bold text-slate-400 uppercase tracking-widest text-sm mb-4">Recently Accepted</h3>
-                                    {upcoming.slice(0, 5).map(appt => (
-                                        <AppointmentCard key={appt._id} appt={appt} isUpcoming onAccept={handleAccept} accepting={accepting} />
+                            ) : pending.length === 0 ? (
+                                <div className="glass-card border border-amber-500/20 p-10 text-center">
+                                    <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                                        <Bell className="w-8 h-8 text-amber-400" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No pending requests</h3>
+                                    <p className="text-slate-400 text-sm max-w-md mx-auto">
+                                        When patients submit new appointment requests for your specialization, they will appear here for you to review and accept.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-5">
+                                    {pending.map(appt => (
+                                        <AppointmentCard
+                                            key={appt._id}
+                                            appt={appt}
+                                            isUpcoming={false}
+                                            onAccept={handleAccept}
+                                            accepting={accepting}
+                                        />
                                     ))}
                                 </div>
                             )}

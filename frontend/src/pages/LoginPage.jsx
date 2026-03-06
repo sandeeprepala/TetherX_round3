@@ -58,14 +58,22 @@ export const LoginPage = () => {
         setLoading(true);
         setToast(null);
         try {
-            const { jwtPayload } = await authApi.login({ email: form.email, password: form.password });
-            // Use JWT payload {id, role} if available (Vite proxy exposes Set-Cookie header)
-            // Otherwise fall back to the role chosen in the UI toggle
-            saveUser({
-                id: jwtPayload?.id ?? null,
-                role: jwtPayload?.role ?? form.role,
-                email: form.email,
-            });
+            const { data, jwtPayload } = await authApi.login({ email: form.email, password: form.password });
+
+            // Prefer backend user payload (id + role) from JSON body.
+            // Fall back to JWT payload (dev-only) and finally to selected role.
+            const fromBody = data?.user || {};
+            const fromJwt = jwtPayload || {};
+
+            const id = fromBody.id ?? fromJwt.id ?? null;
+            const role = fromBody.role ?? fromJwt.role ?? form.role;
+            const email = fromBody.email ?? form.email;
+
+            if (!id) {
+                throw new Error('Login succeeded but user id was not returned by server.');
+            }
+
+            saveUser({ id, role, email });
             setToast({ msg: 'Login successful! Redirecting…', type: 'success' });
             setTimeout(() => navigate('/dashboard'), 1200);
         } catch (err) {

@@ -45,12 +45,30 @@ router.post("/accept/:id", auth, async (req, res) => {
   res.json(request);
 });
 
-/* DOCTOR UPCOMING */
+/* DOCTOR UPCOMING (ACCEPTED ONLY) */
 
 router.get("/appointments/upcoming/:doctorId", auth, async (req, res) => {
   const apps = await Appointment.find({
     doctorId: req.params.doctorId,
     status: "accepted",
+    startDate: { $gte: new Date() }
+  }).populate("patientId");
+
+  res.json(apps);
+});
+
+/* DOCTOR PENDING REQUESTS
+   All pending future appointment requests for this doctor's specialization
+   (department). This ensures doctors see every request in their department,
+   even if it hasn't been explicitly assigned to a specific doctor yet. */
+
+router.get("/appointments/pending/:doctorId", auth, async (req, res) => {
+  const doctor = await Doctor.findById(req.params.doctorId);
+  if (!doctor) return res.status(404).json({ msg: "Doctor not found" });
+
+  const apps = await Appointment.find({
+    specialization: doctor.specialization,
+    status: "pending",
     startDate: { $gte: new Date() }
   }).populate("patientId");
 

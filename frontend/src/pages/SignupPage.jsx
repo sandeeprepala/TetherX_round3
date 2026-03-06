@@ -138,12 +138,22 @@ export const SignupPage = () => {
                 });
             }
 
-            // Save user info decoded from JWT payload (if Vite proxy exposes it)
-            // Falls back to role from the UI toggle
+            const { data, jwtPayload } = result;
+            const fromBody = data?.user || {};
+            const fromJwt = jwtPayload || {};
+
+            const id = fromBody.id ?? fromJwt.id ?? null;
+            const resolvedRole = fromBody.role ?? fromJwt.role ?? role;
+            const email = fromBody.email ?? form.email;
+
+            if (!id) {
+                throw new Error('Signup succeeded but user id was not returned by server.');
+            }
+
             saveUser({
-                id: result?.jwtPayload?.id ?? null,
-                role: result?.jwtPayload?.role ?? role,
-                email: form.email,
+                id,
+                role: resolvedRole,
+                email,
             });
 
             setToast({ msg: 'Account created! Taking you to dashboard…', type: 'success' });
